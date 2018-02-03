@@ -1,6 +1,8 @@
-package com.example.nano1.moviedb;
+package com.example.nano1.moviedb.activity;
 
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -8,20 +10,33 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.nano1.moviedb.MyApp;
+import com.example.nano1.moviedb.NetworkReceiver;
+import com.example.nano1.moviedb.NetworkState;
+import com.example.nano1.moviedb.R;
+import com.example.nano1.moviedb.pojos.Movie;
 import com.squareup.picasso.Picasso;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 public class MovieActivity extends AppCompatActivity {
 
     Movie.ResultsEntity movie;
+    NetworkReceiver mReciever;
+    EventBus bus = MyApp.getBus();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         assert fab != null;
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -40,13 +55,14 @@ public class MovieActivity extends AppCompatActivity {
             }
         });
 
-        TextView title = (TextView) findViewById(R.id.textView7);
-        TextView year = (TextView) findViewById(R.id.textView8);
-        TextView rating = (TextView) findViewById(R.id.textView6);
-        TextView details = (TextView) findViewById(R.id.textView9);
-        ImageView mImageView = (ImageView) findViewById(R.id.imageView);
+        TextView title = findViewById(R.id.textView7);
+        TextView year = findViewById(R.id.textView8);
+        TextView rating = findViewById(R.id.textView6);
+        TextView details = findViewById(R.id.textView9);
+        ImageView mImageView = findViewById(R.id.imageView);
 
-        movie = getIntent().getExtras().getParcelable("key");
+        if (getIntent().getExtras() != null)
+            movie = getIntent().getExtras().getParcelable("key");
 
         if (movie != null) {
             StringBuilder sb = new StringBuilder();
@@ -64,6 +80,31 @@ public class MovieActivity extends AppCompatActivity {
             Picasso.with(this)
                 .load(POSTER_BASE_URL +movie.getPoster_path())
                 .into(mImageView);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        this.mReciever = new NetworkReceiver();
+        registerReceiver(this.mReciever, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        super.onResume();
+        bus.register(this);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(mReciever);
+        super.onPause();
+        bus.unregister(this);
+    }
+
+    // method that will be called when someone posts an event NetworkStateChanged
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(NetworkState event) {
+        if (!event.isInternetConnected()) {
+            Toast.makeText(this, "No Internet connection!", Toast.LENGTH_SHORT).show();
+        } else {
+            //Toast.makeText(this, event.getNetworkType() + " Connection", Toast.LENGTH_SHORT).show();}
         }
     }
 

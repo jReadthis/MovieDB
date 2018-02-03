@@ -2,6 +2,8 @@ package com.example.nano1.moviedb;
 
 import android.util.Log;
 
+import com.example.nano1.moviedb.pojos.Movie;
+
 import junit.framework.TestCase;
 import java.util.List;
 import retrofit2.Call;

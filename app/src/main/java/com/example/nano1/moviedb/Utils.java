@@ -7,7 +7,8 @@ import java.util.HashMap;
  * Created by nano1 on 6/1/2016.
  */
 public class Utils {
-    HashMap<String, Integer> mGenre = new HashMap<>();
+
+    private HashMap<String, Integer> mGenre = new HashMap<>();
 
     public void setmGenre(HashMap<String, Integer> mGenre) {
         this.mGenre = mGenre;

@@ -1,4 +1,4 @@
-package com.example.nano1.moviedb;
+package com.example.nano1.moviedb.pojos;
 
 import android.os.Parcel;
 import android.os.Parcelable;

@@ -1,5 +1,7 @@
 package com.example.nano1.moviedb;
 
+import com.example.nano1.moviedb.activity.MainActivity;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
