@@ -48,7 +48,6 @@ public class ListActivity extends AppCompatActivity {
             name = myArray[0];
         if (myArray.length > 1)
             searchTerm = myArray[1];
-
         switch(name){
             case POPULAR:
                 /*Retrieve Movie data*/

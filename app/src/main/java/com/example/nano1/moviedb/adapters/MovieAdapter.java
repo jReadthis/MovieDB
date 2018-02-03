@@ -4,11 +4,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.example.nano1.moviedb.MyApp;
 import com.example.nano1.moviedb.R;
 import com.example.nano1.moviedb.pojos.Movie;
 import com.example.nano1.moviedb.viewholders.MovieViewHolder;
-import com.squareup.picasso.Picasso;
 import java.util.List;
+
 
 /**
  * Created by nano1 on 1/28/2018.
@@ -17,6 +18,7 @@ import java.util.List;
 public class MovieAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
     private List movieList;
+
 
     public MovieAdapter(List movieList) {
         this.movieList = movieList;
@@ -31,6 +33,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
+
+
+
+
         assert movieList != null;
         Movie.ResultsEntity m = (Movie.ResultsEntity) movieList.get(position);
 
@@ -44,10 +50,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieViewHolder> {
         holder.txtDesc.setText(m.getOverview());
 
         String POSTER_BASE_URL = "https://image.tmdb.org/t/p/original";
-        Picasso.with(holder.imgPoster.getContext())
+        MyApp.picassoWithCache.with(holder.imgPoster.getContext())
+                .with(holder.imgPoster.getContext())
                 .load(POSTER_BASE_URL + m.getPoster_path())
-                //.fit()
-                //.centerCrop()
                 .into(holder.imgPoster);
     }
 
