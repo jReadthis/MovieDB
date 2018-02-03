@@ -64,12 +64,11 @@ public class ListActivity extends AppCompatActivity {
         if (call != null)
             Log.i("LIST URL Called", call.request().url() + " ");
 
-
-
             call.enqueue(new Callback<Movie>() {
                 @Override
                 public void onResponse(Call<Movie> call, Response<Movie> response) {
-                    generateMovieList(response.body().getResults());
+                        Movie results = response.body();
+                        generateMovieList(results.getResults());
                 }
 
                 @Override

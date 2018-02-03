@@ -162,7 +162,6 @@ public class MainActivity extends AppCompatActivity
                         Intent intent = new Intent(MainActivity.this, MovieActivity.class);
                         intent.putExtra("key", mResult);
                         startActivity(intent);
-
                     }
                     else{
                         Toast.makeText(MainActivity.this,"No Movies Found Please Try Again",Toast.LENGTH_LONG).show();
