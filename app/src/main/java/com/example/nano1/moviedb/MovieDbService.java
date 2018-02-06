@@ -10,15 +10,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-import static com.example.nano1.moviedb.MovieDbService.API;
-
 /**
  * Created by nano1 on 5/25/2016.
  */
 public interface MovieDbService {
-    String API = BuildConfig.MOVIE_API_KEY;
 
-    @GET("3/discover/movie?api_key=" + API)
+    String KEY = BuildConfig.MOVIE_API_KEY;
+
+    @GET("3/discover/movie?api_key=" + KEY)
     Call<Movie> getMovies(
             @Query("vote_count.gte") Integer votes,
             @Query("vote_average.gte") Float voteAvg,
@@ -26,7 +25,7 @@ public interface MovieDbService {
             @Query("page") Integer pageNum
     );
 
-    @GET("3/search/movie?api_key=" + API)
+    @GET("3/search/movie?api_key=" + KEY)
     Call<Movie> searchMovies(
             @Query("language") String language,
             @Query("query") String searchTerm,
@@ -34,10 +33,17 @@ public interface MovieDbService {
             @Query("page") Integer pageNum
     );
 
-    @GET("3/discover/movie?api_key="+API+"&sort_by=popularity.desc")
+    @GET("3/discover/movie?api_key=" + KEY + "&sort_by=popularity.desc")
+    Call<Movie> getInTheaters(
+            @Query("primary_release_date.gte") String gte,
+            @Query("primary_release_date.lte") String lte,
+            @Query("page") Integer pageNum
+    );
+
+    @GET("3/discover/movie?api_key="+ KEY +"&sort_by=popularity.desc")
     Call<Movie> getPopularMovies();
 
-    @GET("3/discover/movie?api_key="+API+"&vote_count.gte=4000")
+    @GET("3/discover/movie?api_key="+ KEY +"&vote_count.gte=4000")
     Call<Movie> discoverVoteCount();
 
     class Implementation{

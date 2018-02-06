@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     * Make Call to API call
+     * Make KEY call to retrieve Movies then randomly select one
      * @param view
      */
     public void fetchMovies(View view) {
@@ -241,8 +241,11 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_search) {
             Intent myIntent = new Intent(MainActivity.this, SearchActivity.class);
             MainActivity.this.startActivity(myIntent);
-        } else if (id == R.id.nav_gallery) {
-
+        } else if (id == R.id.nav_theaters) {
+            Intent myIntent = new Intent(MainActivity.this, ListActivity.class);
+            String[] myStrings = new String[]{"theaters"};
+            myIntent.putExtra("list", myStrings);
+            MainActivity.this.startActivity(myIntent);
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_popular) {

@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SearchActivity extends AppCompatActivity {
 
+    private static final String TAG = SearchActivity.class.getSimpleName();
     EditText searchTerm;
     Button searchButton;
 

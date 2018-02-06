@@ -1,4 +1,4 @@
-package com.example.nano1.moviedb;
+package com.example.nano1.moviedb.activity;
 
 import com.example.nano1.moviedb.activity.MainActivity;
 

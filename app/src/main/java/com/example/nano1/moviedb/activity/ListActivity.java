@@ -1,6 +1,8 @@
 package com.example.nano1.moviedb.activity;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -17,6 +19,8 @@ import com.example.nano1.moviedb.R;
 import com.example.nano1.moviedb.adapters.MovieAdapter;
 import com.example.nano1.moviedb.listeners.MovieItemClickListener;
 import com.example.nano1.moviedb.pojos.Movie;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,12 +29,16 @@ import retrofit2.Response;
 
 public class ListActivity extends AppCompatActivity {
 
+    private static final String TAG = ListActivity.class.getSimpleName();
     private RecyclerView recyclerView;
     private MovieAdapter movieAdapter;
     private String name;
     private String searchTerm;
     private static final String POPULAR = "popular";
     private static final String SEARCH = "search";
+    private static final String THEATERS = "theaters";
+    private String today;
+    private String twoWeeksBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,36 +47,48 @@ public class ListActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        /*Create handle for the RetrofitInstance interface*/
+        /**
+         * Create handle for the RetrofitInstance interface
+         */
         MovieDbService service = MovieDbService.Implementation.get();
         Call<Movie> call = null;
         String[] myArray = getIntent().getExtras().getStringArray("list");
         Log.i("LIST", myArray[0]);
         if (myArray.length > 0)
             name = myArray[0];
-        if (myArray.length > 1)
-            searchTerm = myArray[1];
+
+        /**
+         * Retrieve Movie data
+         */
         switch(name){
             case POPULAR:
-                /*Retrieve Movie data*/
                 call = service.getPopularMovies();
                 break;
             case SEARCH:
-                Log.i("LIST", myArray[1]);
+                if (myArray.length > 1)
+                    searchTerm = myArray[1];
+                Log.i(TAG, myArray[1]);
                 call = service.searchMovies("en-US", searchTerm, false,1);
                 break;
+            case THEATERS:
+                generateDates();
+                call = service.getInTheaters(twoWeeksBack,today,1);
             default:
 
         }
 
         if (call != null)
-            Log.i("LIST URL Called", call.request().url() + " ");
+            Log.i("TAG", call.request().url() + " ");
 
             call.enqueue(new Callback<Movie>() {
                 @Override
                 public void onResponse(Call<Movie> call, Response<Movie> response) {
                         Movie results = response.body();
-                        generateMovieList(results.getResults());
+                        if (results != null){
+                            generateMovieList(results.getResults());
+                        }else{
+                            Toast.makeText(getBaseContext(), "No Results", Toast.LENGTH_SHORT).show();
+                        }
                 }
 
                 @Override
@@ -86,6 +106,17 @@ public class ListActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    public void generateDates() {
+        Calendar t = Calendar.getInstance();
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        today = dateFormatter.format(t.getTime());
+        Calendar w = t;
+        w.add(Calendar.WEEK_OF_MONTH, -2);
+        twoWeeksBack = dateFormatter.format(w.getTime());
+        Log.i(TAG, "START: " + twoWeeksBack + " END: " + today );
+        System.out.println("START: " + twoWeeksBack + " END: " + today);
     }
 
     /*Method to generate List of Movies using RecyclerView with custom adapter*/
@@ -106,5 +137,7 @@ public class ListActivity extends AppCompatActivity {
         }));
 
     }
+
+
 
 }
