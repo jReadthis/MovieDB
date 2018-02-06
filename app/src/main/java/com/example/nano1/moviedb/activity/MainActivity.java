@@ -1,12 +1,16 @@
 package com.example.nano1.moviedb.activity;
 
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -31,7 +35,6 @@ import com.example.nano1.moviedb.pojos.Movie;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +46,16 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    String[] mRatingArray;
-    String[] mVotesArray;
-    String[] mGenreArray;
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    private static final int PERMISSIONS_REQUEST_CODE = 1111;
+
+    /**
+     * Arrays to hold values for spinner
+     */
+    private String[] mRatingArray;
+    private String[] mVotesArray;
+    private String[] mGenreArray;
 
     private Movie mMovies;
     private List<Movie.ResultsEntity> mResults;
@@ -96,53 +106,42 @@ public class MainActivity extends AppCompatActivity
         Spinner spinnerVotes = findViewById(R.id.spinnerVotes);
         Spinner spinnerGenre = findViewById(R.id.spinnerGenre);
 
+        /**
+         * Build spinner to hold rating
+         */
         ArrayAdapter<String> ratingAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, mRatingArray);
         spinnerRating.setAdapter(ratingAdapter);
+        setSpinnerListener(spinnerRating, "rating");
 
-        spinnerRating.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                rating = Float.parseFloat(parent.getItemAtPosition(position).toString());
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
+        /**
+         * Build spinner to hold votes
+         */
         ArrayAdapter<String> votesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, mVotesArray);
         spinnerVotes.setAdapter(votesAdapter);
+        setSpinnerListener(spinnerVotes, "votes");
 
-        spinnerVotes.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                votes = Integer.parseInt(parent.getItemAtPosition(position).toString());
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
+        /**
+         * Build spinner to hold genres
+         */
         ArrayAdapter<String> genreAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, mGenreArray);
         spinnerGenre.setAdapter(genreAdapter);
+        setSpinnerListener(spinnerGenre, "genre");
 
-        spinnerGenre.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                key = parent.getItemAtPosition(position).toString();
-                genre = mapGenre.get(key);
-            }
+        /**
+         * Check Permissions
+         */
+        if (!havePermissions()) {
+            Log.i(TAG, "Requesting permissions needed for this app.");
+            requestPermissions();
+        }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
     }
 
+
+    /**
+     * Make Call to API call
+     * @param view
+     */
     public void fetchMovies(View view) {
         Call<Movie> call = MovieDbService.Implementation.get().getMovies(votes, rating, genre, 1);
         call.enqueue(new Callback<Movie>() {
@@ -151,13 +150,13 @@ public class MainActivity extends AppCompatActivity
                 mMovies = response.body();
                 if (mMovies != null)
                     mResults = mMovies.getResults();
-                    Log.i("movieResult", String.valueOf(mResults.size()));
+                    Log.i(TAG, String.valueOf(mResults.size()));
                     if (mResults.size() > 1) {
                         int num = randomNumber(1, mResults.size()-1);
 
                         Movie.ResultsEntity mResult;
                         mResult = mResults.get(num);
-                        Log.i("movieResult", mResult.getTitle());
+                        Log.i(TAG, mResult.getTitle());
 
                         Intent intent = new Intent(MainActivity.this, MovieActivity.class);
                         intent.putExtra("key", mResult);
@@ -166,24 +165,32 @@ public class MainActivity extends AppCompatActivity
                     else{
                         Toast.makeText(MainActivity.this,"No Movies Found Please Try Again",Toast.LENGTH_LONG).show();
                     }
-
             }
 
             @Override
             public void onFailure(Call<Movie> call, Throwable t) {
-
+                Log.i(TAG, t.toString());
             }
         });
-
-
     }
 
+    /**
+     * Generate Random Number
+     * @param min
+     * @param max
+     * @return random Number
+     */
     public int randomNumber(int min, int max){
         Random rand = new Random();
         return min + rand.nextInt(max - min + 1);
     }
 
-    public Map<String,Integer> loadMap(){
+
+    /**
+     * Load Movie genres in Map
+     * @return genres
+     */
+    private Map<String,Integer> loadMap(){
         Map<String, Integer> genres = new HashMap<>();
 
         for (GenreEnum g : GenreEnum.values()){
@@ -231,14 +238,14 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_search) {
             Intent myIntent = new Intent(MainActivity.this, SearchActivity.class);
             MainActivity.this.startActivity(myIntent);
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_popular) {
             Intent myIntent = new Intent(MainActivity.this, ListActivity.class);
             String[] myStrings = new String[]{"popular"};
             myIntent.putExtra("list", myStrings);
@@ -275,7 +282,9 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    // method that will be called when someone posts an event NetworkStateChanged
+    /**
+     * Called when someone posts an event NetworkStateChanged
+     */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(NetworkState event) {
         if (!event.isInternetConnected()) {
@@ -283,6 +292,42 @@ public class MainActivity extends AppCompatActivity
         } else {
             //Toast.makeText(this, event.getNetworkType() + " Connection", Toast.LENGTH_SHORT).show();}
         }
+    }
+
+
+    private boolean havePermissions() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_CODE);
+    }
+
+    private void setSpinnerListener(Spinner spinner, final String spinnerType) {
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (spinnerType){
+                    case "votes":
+                        votes = Integer.parseInt(parent.getItemAtPosition(position).toString());
+                        break;
+                    case "genre":
+                        key = parent.getItemAtPosition(position).toString();
+                        genre = mapGenre.get(key);
+                        break;
+                    case "rating":
+                        rating = Float.parseFloat(parent.getItemAtPosition(position).toString());
+                        break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
     }
 
 }

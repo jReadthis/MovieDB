@@ -44,7 +44,7 @@ public class ListActivity extends AppCompatActivity {
         Call<Movie> call = null;
         String[] myArray = getIntent().getExtras().getStringArray("list");
         Log.i("LIST", myArray[0]);
-        if (myArray != null)
+        if (myArray.length > 0)
             name = myArray[0];
         if (myArray.length > 1)
             searchTerm = myArray[1];
@@ -93,7 +93,6 @@ public class ListActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         movieAdapter = new MovieAdapter(movieList);
         recyclerView.setAdapter(movieAdapter);
-
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.addOnItemTouchListener(new MovieItemClickListener(this, new AdapterView.OnItemClickListener() {

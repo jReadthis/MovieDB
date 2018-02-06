@@ -9,8 +9,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.nano1.moviedb.R;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -32,17 +35,25 @@ public class SearchActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-
+        
         searchTerm = findViewById(R.id.et_Search);
         searchButton = findViewById(R.id.btn_Search);
     }
 
 
     public void onClick(View view) {
-        Intent myIntent = new Intent(SearchActivity.this, ListActivity.class);
-        String[] myStrings = new String[]{"search", searchTerm.getText().toString()};
-        myIntent.putExtra("list", myStrings);
-        SearchActivity.this.startActivity(myIntent);
+        String keyword = searchTerm.getText().toString();
+        if (isKeywordEnterd(searchTerm.getText().toString())){
+            Intent myIntent = new Intent(SearchActivity.this, ListActivity.class);
+            String[] myStrings = new String[]{"search", keyword};
+            myIntent.putExtra("list", myStrings);
+            SearchActivity.this.startActivity(myIntent);
+        }else{
+            Toast.makeText(this,"Please Enter a Keyword", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public boolean isKeywordEnterd(String keyword){
+        return StringUtils.isNotBlank(keyword);
     }
 }
