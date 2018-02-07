@@ -1,5 +1,7 @@
 package com.example.nano1.moviedb;
 
+import java.util.Map;
+
 /**
  * Created by nano1 on 5/23/2017.
  */
@@ -37,11 +39,25 @@ public enum GenreEnum {
         this.code = code;
     }
 
+    public static String find(int code){
+        String name = null;
+        for (GenreEnum genreEnum : GenreEnum.values()) {
+            if (genreEnum.getCode() == code) {
+                 name = genreEnum.getName();
+            }
+        }
+        return name;
+    }
+
     public String getName(){
         return name;
     }
 
     public int getCode(){
         return code;
+    }
+
+    public GenreEnum[] getValues(){
+        return values();
     }
 }

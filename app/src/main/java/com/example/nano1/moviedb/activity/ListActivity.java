@@ -63,16 +63,19 @@ public class ListActivity extends AppCompatActivity {
         switch(name){
             case POPULAR:
                 call = service.getPopularMovies();
+                setTitle(getString(R.string.title_activity_list_popular));
                 break;
             case SEARCH:
                 if (myArray.length > 1)
                     searchTerm = myArray[1];
                 Log.i(TAG, myArray[1]);
                 call = service.searchMovies("en-US", searchTerm, false,1);
+                setTitle(getString(R.string.title_activity_list_search));
                 break;
             case THEATERS:
                 generateDates();
                 call = service.getInTheaters(twoWeeksBack,today,1);
+                setTitle(getString(R.string.title_activity_list_in_theaters));
             default:
 
         }
@@ -129,7 +132,7 @@ public class ListActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new MovieItemClickListener(this, new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getApplicationContext(), movieList.get(position).getTitle(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), movieList.get(position).getTitle(), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ListActivity.this, MovieActivity.class);
                 intent.putExtra("key", movieList.get(position));
                 startActivity(intent);

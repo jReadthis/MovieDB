@@ -8,7 +8,7 @@
             android:title="Search" />
         <item
             android:id="@+id/nav_theaters"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_menu_ticket"
             android:title="In Theaters" />
         <item
             android:id="@+id/nav_slideshow"

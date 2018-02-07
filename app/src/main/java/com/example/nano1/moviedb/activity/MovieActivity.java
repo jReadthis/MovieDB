@@ -7,11 +7,13 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.nano1.moviedb.GenreEnum;
 import com.example.nano1.moviedb.MyApp;
 import com.example.nano1.moviedb.NetworkReceiver;
 import com.example.nano1.moviedb.NetworkState;
@@ -28,6 +30,7 @@ public class MovieActivity extends AppCompatActivity {
     Movie.ResultsEntity movie;
     NetworkReceiver mReciever;
     EventBus bus = MyApp.getBus();
+    private static final String TAG = MovieActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +68,11 @@ public class MovieActivity extends AppCompatActivity {
             movie = getIntent().getExtras().getParcelable("key");
 
         if (movie != null) {
+            //setTitle(movie.getTitle());
             StringBuilder sb = new StringBuilder();
             sb.append(movie.getVote_average()).append("/10 (").append(movie.getVote_count()).append(")");
             assert title != null;
+            Log.i(TAG, String.valueOf(movie.getTitle()));
             title.setText(movie.getTitle());
             assert year != null;
             year.setText(movie.getRelease_date().split("-")[0]);
