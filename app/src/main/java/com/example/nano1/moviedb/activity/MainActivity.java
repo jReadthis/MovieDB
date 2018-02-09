@@ -6,7 +6,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -23,15 +28,23 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import com.example.nano1.moviedb.BuildConfig;
 import com.example.nano1.moviedb.GenreEnum;
 import com.example.nano1.moviedb.MovieDbService;
 import com.example.nano1.moviedb.MyApp;
 import com.example.nano1.moviedb.NetworkReceiver;
 import com.example.nano1.moviedb.NetworkState;
 import com.example.nano1.moviedb.R;
+import com.example.nano1.moviedb.Utils;
 import com.example.nano1.moviedb.pojos.Movie;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.ui.PlacePicker;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -49,6 +62,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int PERMISSIONS_REQUEST_CODE = 1111;
+    //private static final int PLACE_PICKER_REQUEST = 1;
 
     /**
      * Arrays to hold values for spinner
@@ -66,6 +80,10 @@ public class MainActivity extends AppCompatActivity
     private int genre;
     NetworkReceiver mReciever;
     EventBus bus = MyApp.getBus();
+    /**
+     * The container {@link android.view.ViewGroup} for the minimal UI associated with this sample.
+     */
+    private RelativeLayout mContainer;
 
 
 
@@ -85,6 +103,8 @@ public class MainActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
+
+        mContainer = findViewById(R.id.main_activity_container);
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -127,16 +147,48 @@ public class MainActivity extends AppCompatActivity
         spinnerGenre.setAdapter(genreAdapter);
         setSpinnerListener(spinnerGenre, "genre");
 
-        /**
-         * Check Permissions
-         */
-        if (!havePermissions()) {
-            Log.i(TAG, "Requesting permissions needed for this app.");
-            requestPermissions();
-        }
+//        /**
+//         * Check Permissions
+//         */
+//        if (!havePermissions()) {
+//            Log.i(TAG, "Requesting permissions needed for this app.");
+//            requestPermissions();
+//        }
 
     }
 
+//    @RequiresApi(api = Build.VERSION_CODES.M)
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//
+//        if (requestCode != PERMISSIONS_REQUEST_CODE){
+//            return;
+//        }
+//        for (int i = 0; i < permissions.length; i++){
+//            String permission = permissions[i];
+//            if (grantResults[i] == PackageManager.PERMISSION_DENIED){
+//                // There are states to watch when a user denies permission when presented with
+//                // the Nearby permission dialog: 1) When the user pressed "Deny", but does not
+//                // check the "Never ask again" option. In this case, we display a Snackbar which
+//                // lets the user kick off the permissions flow again. 2) When the user pressed
+//                // "Deny" and also checked the "Never ask again" option. In this case, the
+//                // permission dialog will no longer be presented to the user. The user may still
+//                // want to authorize location and use the app, and we present a Snackbar that
+//                // directs them to go to Settings where they can grant the location permission.
+//                if (shouldShowRequestPermissionRationale(permission)) {
+//                    Log.i(TAG, "Permission denied without 'NEVER ASK AGAIN': " + permission);
+//                    showRequestPermissionsSnackbar();
+//                } else {
+//                    Log.i(TAG, "Permission denied with 'NEVER ASK AGAIN': " + permission);
+//                    showLinkToSettingsSnackbar();
+//                }
+//            }else{
+//                Log.i(TAG, "Permission granted, building GoogleApiClient");
+//                //buildGoogleApiClient();
+//            }
+//        }
+//    }
 
     /**
      * Make KEY call to retrieve Movies then randomly select one
@@ -242,12 +294,13 @@ public class MainActivity extends AppCompatActivity
             Intent myIntent = new Intent(MainActivity.this, SearchActivity.class);
             MainActivity.this.startActivity(myIntent);
         } else if (id == R.id.nav_theaters) {
+            Intent myIntent = new Intent(MainActivity.this, MapsActivity.class);
+            MainActivity.this.startActivity(myIntent);
+        } else if (id == R.id.nav_new) {
             Intent myIntent = new Intent(MainActivity.this, ListActivity.class);
             String[] myStrings = new String[]{"theaters"};
             myIntent.putExtra("list", myStrings);
             MainActivity.this.startActivity(myIntent);
-        } else if (id == R.id.nav_slideshow) {
-
         } else if (id == R.id.nav_popular) {
             Intent myIntent = new Intent(MainActivity.this, ListActivity.class);
             String[] myStrings = new String[]{"popular"};
@@ -332,5 +385,51 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+//    /**
+//     * Displays {@link Snackbar} instructing user to visit Settings to grant permissions required by
+//     * this application.
+//     */
+//    private void showLinkToSettingsSnackbar() {
+//        if (mContainer == null) {
+//            return;
+//        }
+//        Snackbar.make(mContainer,
+//                R.string.permission_denied_explanation,
+//                Snackbar.LENGTH_INDEFINITE)
+//                .setAction(R.string.settings, new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        // Build intent that displays the App settings screen.
+//                        Intent intent = new Intent();
+//                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                        Uri uri = Uri.fromParts("package",
+//                                BuildConfig.APPLICATION_ID, null);
+//                        intent.setData(uri);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        startActivity(intent);
+//                    }
+//                }).show();
+//    }
+
+//    /**
+//     * Displays {@link Snackbar} with button for the user to re-initiate the permission workflow.
+//     */
+//    private void showRequestPermissionsSnackbar() {
+//        if (mContainer == null) {
+//            return;
+//        }
+//        Snackbar.make(mContainer, R.string.permission_rationale,
+//                Snackbar.LENGTH_INDEFINITE)
+//                .setAction(R.string.ok, new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        // Request permission.
+//                        ActivityCompat.requestPermissions(MainActivity.this,
+//                                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                                PERMISSIONS_REQUEST_CODE);
+//                    }
+//                }).show();
+//    }
 
 }

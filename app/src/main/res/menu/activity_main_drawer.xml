@@ -9,11 +9,11 @@
         <item
             android:id="@+id/nav_theaters"
             android:icon="@drawable/ic_menu_ticket"
-            android:title="In Theaters" />
+            android:title="Theaters" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/nav_new"
+            android:icon="@drawable/ic_menu_new"
+            android:title="New Movies" />
         <item
             android:id="@+id/nav_popular"
             android:icon="@drawable/ic_menu_popular"
