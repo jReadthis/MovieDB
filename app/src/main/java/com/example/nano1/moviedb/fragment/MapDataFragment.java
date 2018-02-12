@@ -3,12 +3,22 @@ package com.example.nano1.moviedb.fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.nano1.moviedb.R;
+import com.example.nano1.moviedb.pojos.Result;
+import com.example.nano1.moviedb.pojos.Theater;
+import com.example.nano1.moviedb.service.PlacesService;
+
+import java.util.List;
+
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -19,14 +29,22 @@ import com.example.nano1.moviedb.R;
  * create an instance of this fragment.
  */
 public class MapDataFragment extends Fragment {
+
+    private static final String TAG = MapDataFragment.class.getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM1 = "place";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
+    private Theater mParam1;
     private String mParam2;
+
+    private TextView textView1;
+    private TextView textView2;
+    private TextView textView3;
+    private TextView textView4;
+    private TextView textView5;
 
     private OnFragmentInteractionListener mListener;
 
@@ -43,10 +61,10 @@ public class MapDataFragment extends Fragment {
      * @return A new instance of fragment MapDataFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static MapDataFragment newInstance(String param1, String param2) {
+    public static MapDataFragment newInstance(Theater param1, String param2) {
         MapDataFragment fragment = new MapDataFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
+        args.putParcelable(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
@@ -56,23 +74,50 @@ public class MapDataFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            mParam1 = getArguments().getParcelable(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_map_data, container, false);
+        View view = inflater.inflate(R.layout.fragment_map_data,container,false);
+        textView1 = view.findViewById(R.id.theater1);
+        textView2 = view.findViewById(R.id.theater2);
+        textView3 = view.findViewById(R.id.theater3);
+        textView4 = view.findViewById(R.id.theater4);
+        textView5 = view.findViewById(R.id.theater5);
+
+        if (mParam1 != null){
+            List<Result> place = mParam1.getResults();
+            textView1.setText(place.get(0).getName());
+            textView2.setText(place.get(1).getName());
+            textView3.setText(place.get(2).getName());
+            textView4.setText(place.get(3).getName());
+            textView5.setText(place.get(4).getName());
+            Log.i(TAG, place.toString());
+            place.get(0).getOpeningHours().isOpenNow();
+        }
+        return view;
     }
+
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+    }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
+
     }
 
     @Override
@@ -90,6 +135,10 @@ public class MapDataFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public void updateText() {
+
     }
 
     /**

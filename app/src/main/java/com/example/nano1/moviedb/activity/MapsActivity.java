@@ -1,7 +1,6 @@
 package com.example.nano1.moviedb.activity;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -9,30 +8,39 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.nano1.moviedb.BuildConfig;
+import com.example.nano1.moviedb.GetNearbyPlacesData;
 import com.example.nano1.moviedb.PermissionUtils;
 import com.example.nano1.moviedb.R;
 import com.example.nano1.moviedb.fragment.MapDataFragment;
+import com.example.nano1.moviedb.pojos.Result;
+import com.example.nano1.moviedb.pojos.Theater;
+import com.example.nano1.moviedb.service.PlacesService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceLikelihood;
-import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class MapsActivity extends FragmentActivity
@@ -44,9 +52,14 @@ public class MapsActivity extends FragmentActivity
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
+    String KEY = BuildConfig.PLACES_API_KEY;
     private CameraPosition mCameraPosition;
     private SupportMapFragment mapFragment;
     private MapDataFragment dataFragment;
+    private int PROXIMITY_RADIUS = 5000;
+    private static final String Theaters = "movie_theater";
+    double latitude;
+    double longitude;
 
     // The entry points to the Places API.
     private GeoDataClient mGeoDataClient;
@@ -66,10 +79,7 @@ public class MapsActivity extends FragmentActivity
 
     // Used for selecting the current place.
     private static final int M_MAX_ENTRIES = 5;
-    private String[] mLikelyPlaceNames;
-    private String[] mLikelyPlaceAddresses;
-    private String[] mLikelyPlaceAttributions;
-    private LatLng[] mLikelyPlaceLatLngs;
+    public Theater theater;
 
 
     /**
@@ -103,10 +113,20 @@ public class MapsActivity extends FragmentActivity
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
         dataFragment = new MapDataFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.theaters, dataFragment).commit();
+    }
 
+    private void loadData() {
+        Log.d(TAG + ":loadData() ", "Enter method");
+        if (theater != null) {
+            Bundle args = new Bundle();
+            args.putParcelable("place", theater);
+            dataFragment.setArguments(args);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.theaters, dataFragment);
+            transaction.commit();
+        }
+        Log.d(TAG + ":loadData() ", "Exit method");
     }
 
 
@@ -142,7 +162,8 @@ public class MapsActivity extends FragmentActivity
             // Access to the location has been granted to the app.
             mMap.setMyLocationEnabled(true);
             getDeviceLocation();
-            showCurrentPlace();
+            //showCurrentPlace();
+
         }
     }
 
@@ -187,18 +208,22 @@ public class MapsActivity extends FragmentActivity
     }
 
     /**
+     *
      * Displays a dialog with error message explaining that the location permission is missing.
-     */
+     *
+     * */
     private void showMissingPermissionError() {
         PermissionUtils.PermissionDeniedDialog
                 .newInstance(true).show(getSupportFragmentManager(), "dialog");
     }
 
-    private void getDeviceLocation() {
-    /*
+    /**
+     *
      * Get the best and most recent location of the device, which may be null in rare
      * cases when a location is not available.
-     */
+     *
+     **/
+    private void getDeviceLocation() {
         try {
             if (!mPermissionDenied) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -211,6 +236,8 @@ public class MapsActivity extends FragmentActivity
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(mLastKnownLocation.getLatitude(),
                                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            Log.d(TAG, "Latitude: " + mLastKnownLocation.getLatitude() + " Longitude: " + mLastKnownLocation.getLongitude());
+                            showTheaters();
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
@@ -225,120 +252,56 @@ public class MapsActivity extends FragmentActivity
         }
     }
 
-    /**
-     * Prompts the user to select the current place from a list of likely places, and shows the
-     * current place on the map - provided the user has granted location permission.
-     */
-    private void showCurrentPlace() {
+    private void showTheaters() {
+        Log.d(TAG + ":showTheaters() ", "Enter method");
         if (mMap == null) {
             return;
         }
 
         if (!mPermissionDenied) {
-            // Get the likely places - that is, the businesses and other points of interest that
-            // are the best match for the device's current location.
-            @SuppressWarnings("MissingPermission") final
-            Task<PlaceLikelihoodBufferResponse> placeResult =
-                    mPlaceDetectionClient.getCurrentPlace(null);
-            placeResult.addOnCompleteListener
-                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
-                        @Override
-                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+            mMap.clear();
+            if ( mLastKnownLocation != null){
+                latitude = mLastKnownLocation.getLatitude();
+                longitude = mLastKnownLocation.getLongitude();
+            }
+            Log.d(TAG, "Latitude: " + latitude + " Longitude: " + latitude);
+//            String url = getUrl(latitude, longitude, Theaters);
 
-                                // Set the count, handling cases where less than 5 entries are returned.
-                                int count;
-                                if (likelyPlaces.getCount() < M_MAX_ENTRIES) {
-                                    count = likelyPlaces.getCount();
-                                } else {
-                                    count = M_MAX_ENTRIES;
-                                }
+            Call<Theater> call =  PlacesService.Implementation.get().getNearBy(latitude+","+longitude,PROXIMITY_RADIUS,Theaters, KEY);
+            call.enqueue(new Callback<Theater>() {
+                @Override
+                public void onResponse(Call<Theater> call, Response<Theater> response) {
+                    theater = response.body();
+                    List<Result> nearbyPlacesList = theater.getResults();
+                    showNearbyPlaces(nearbyPlacesList);
+                    loadData();
+                }
 
-                                int i = 0;
-                                mLikelyPlaceNames = new String[count];
-                                mLikelyPlaceAddresses = new String[count];
-                                mLikelyPlaceAttributions = new String[count];
-                                mLikelyPlaceLatLngs = new LatLng[count];
-
-                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                                    // Build a list of likely places to show the user.
-                                    mLikelyPlaceNames[i] = (String) placeLikelihood.getPlace().getName();
-                                    mLikelyPlaceAddresses[i] = (String) placeLikelihood.getPlace()
-                                            .getAddress();
-                                    mLikelyPlaceAttributions[i] = (String) placeLikelihood.getPlace()
-                                            .getAttributions();
-                                    mLikelyPlaceLatLngs[i] = placeLikelihood.getPlace().getLatLng();
-
-                                    i++;
-                                    if (i > (count - 1)) {
-                                        break;
-                                    }
-                                }
-
-                                // Release the place likelihood buffer, to avoid memory leaks.
-                                likelyPlaces.release();
-
-                                // Show a dialog offering the user the list of likely places, and add a
-                                // marker at the selected place.
-                                openPlacesDialog();
-
-                            } else {
-                                Log.e(TAG, "Exception: %s", task.getException());
-                            }
-                        }
-                    });
-        } else {
-            // The user has not granted permission.
-            Log.i(TAG, "The user did not grant location permission.");
-
-//            // Add a default marker, because the user hasn't selected a place.
-//            mMap.addMarker(new MarkerOptions()
-//                    .title(getString(R.string.default_info_title))
-//                    .position(mDefaultLocation)
-//                    .snippet(getString(R.string.default_info_snippet)));
-//
-//            // Prompt the user for permission.
-//            getLocationPermission();
+                @Override
+                public void onFailure(Call<Theater> call, Throwable t) {
+                    Toast.makeText(MapsActivity.this, "No Nearby Movie Theaters", Toast.LENGTH_SHORT).show();
+                }
+            });
+            Log.d(TAG + ":showTheaters() ", "Exit method");
         }
     }
 
-
-    /**
-     * Displays a form allowing the user to select a place from a list of likely places.
-     */
-    private void openPlacesDialog() {
-        // Ask the user to choose the place where they are now.
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // The "which" argument contains the position of the selected item.
-                LatLng markerLatLng = mLikelyPlaceLatLngs[which];
-                String markerSnippet = mLikelyPlaceAddresses[which];
-                if (mLikelyPlaceAttributions[which] != null) {
-                    markerSnippet = markerSnippet + "\n" + mLikelyPlaceAttributions[which];
-                }
-
-                // Add a marker for the selected place, with an info window
-                // showing information about that place.
-                mMap.addMarker(new MarkerOptions()
-                        .title(mLikelyPlaceNames[which])
-                        .position(markerLatLng)
-                        .snippet(markerSnippet));
-
-                // Position the map's camera at the location of the marker.
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng,
-                        DEFAULT_ZOOM));
-            }
-        };
-
-        // Display the dialog.
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.pick_place)
-                .setItems(mLikelyPlaceNames, listener)
-                .show();
+    private void showNearbyPlaces(List<Result> nearbyPlacesList) {
+        Log.d(TAG + ":showNearbyPlaces()", "Enter method");
+        for (Result place : nearbyPlacesList) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            LatLng latLng = new LatLng(place.getGeometry().getLocation().getLat(),
+                    place.getGeometry().getLocation().getLng());
+            markerOptions.position(latLng);
+            markerOptions.title(place.getName());
+            mMap.addMarker(markerOptions);
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+            //Move Map Camera
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+        }
+        Log.d(TAG + ":showNearbyPlaces()", "Exit method");
     }
-
 
     @Override
     public void onFragmentInteraction(Uri uri) {

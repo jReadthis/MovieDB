@@ -1,8 +1,6 @@
 package com.example.nano1.moviedb.activity;
 
-import android.annotation.TargetApi;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,7 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Toast;
-import com.example.nano1.moviedb.MovieDbService;
+import com.example.nano1.moviedb.service.MovieDbService;
 import com.example.nano1.moviedb.R;
 import com.example.nano1.moviedb.adapters.MovieAdapter;
 import com.example.nano1.moviedb.listeners.MovieItemClickListener;

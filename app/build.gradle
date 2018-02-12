@@ -19,6 +19,8 @@ android {
     buildTypes.each {
         it.buildConfigField 'String', 'BASE_THEMOVIEDB_URL', '"http://api.themoviedb.org/"'
         it.buildConfigField 'String', 'MOVIE_API_KEY', '"0fdf073787eb4d48e8a975fc90cf5c43"'
+        it.buildConfigField 'String', 'BASE_PLACES_URL', '"https://maps.googleapis.com/"'
+        it.buildConfigField 'String', 'PLACES_API_KEY', '"AIzaSyA608hn-Lx31A60Z2McJtJTHqSPIQbhN08"'
     }
     testOptions {
         unitTests.returnDefaultValues = true

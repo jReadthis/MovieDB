@@ -1,8 +1,9 @@
-package com.example.nano1.moviedb;
+package com.example.nano1.moviedb.service;
 
 import android.util.Log;
 
 import com.example.nano1.moviedb.pojos.Movie;
+import com.example.nano1.moviedb.service.MovieDbService;
 
 import junit.framework.TestCase;
 import java.util.List;

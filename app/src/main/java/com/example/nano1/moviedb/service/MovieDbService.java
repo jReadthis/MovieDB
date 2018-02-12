@@ -1,5 +1,6 @@
-package com.example.nano1.moviedb;
+package com.example.nano1.moviedb.service;
 
+import com.example.nano1.moviedb.BuildConfig;
 import com.example.nano1.moviedb.pojos.Movie;
 
 import okhttp3.OkHttpClient;
