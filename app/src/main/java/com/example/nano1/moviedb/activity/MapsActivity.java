@@ -14,7 +14,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.nano1.moviedb.BuildConfig;
-import com.example.nano1.moviedb.GetNearbyPlacesData;
 import com.example.nano1.moviedb.PermissionUtils;
 import com.example.nano1.moviedb.R;
 import com.example.nano1.moviedb.fragment.MapDataFragment;
@@ -26,7 +25,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -272,14 +270,18 @@ public class MapsActivity extends FragmentActivity
                 @Override
                 public void onResponse(Call<Theater> call, Response<Theater> response) {
                     theater = response.body();
-                    List<Result> nearbyPlacesList = theater.getResults();
-                    showNearbyPlaces(nearbyPlacesList);
-                    loadData();
+                    if (theater != null && theater.getResults().size() > 0) {
+                        List<Result> nearbyPlacesList = theater.getResults();
+                        showNearbyPlaces(nearbyPlacesList);
+                        loadData();
+                    } else {
+                        Toast.makeText(MapsActivity.this, "No Nearby Movie Theaters", Toast.LENGTH_SHORT).show();
+                    }
                 }
 
                 @Override
                 public void onFailure(Call<Theater> call, Throwable t) {
-                    Toast.makeText(MapsActivity.this, "No Nearby Movie Theaters", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG + ":showTheaters() ",t.toString(),t);
                 }
             });
             Log.d(TAG + ":showTheaters() ", "Exit method");

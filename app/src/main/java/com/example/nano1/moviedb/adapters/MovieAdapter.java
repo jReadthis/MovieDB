@@ -34,10 +34,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
-
-
-
-
         assert movieList != null;
         Movie.ResultsEntity m = (Movie.ResultsEntity) movieList.get(position);
 
@@ -52,7 +48,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
         String POSTER_BASE_URL = "https://image.tmdb.org/t/p/original";
         MyApp.picassoWithCache.with(holder.imgPoster.getContext())
-                .with(holder.imgPoster.getContext())
                 .load(POSTER_BASE_URL + m.getPoster_path())
                 .into(holder.imgPoster);
     }
